@@ -57,12 +57,9 @@
 	<section id="main">
 		<div class="wrapBox">
 			<h2>sudoku</h2>
-			<transition-group name="list" tag="div" class="sudokuBox">
+			<div class="sudokuBox">
 				<div v-for="cell in sudoList" v-bind:key="cell.id"><input :class="{error:cell.error}" :disabled="cell.disable" type="text" v-model="cell.num" maxlength="1" @input="validateNum(cell.id,cell.num)"></div>
-			</transition-group>
-			<!-- <button @click="curRowArr(1)">getRow</button>
-			<button @click="curColArr(1)">getCol</button>
-			<button @click="curBlockArr(1)">getBlock</button> -->
+			</div>
 		</div>
 	</section>
 </div>
