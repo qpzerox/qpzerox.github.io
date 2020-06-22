@@ -1,5 +1,5 @@
 # qpzerox.github.io
-<p><a href="https://qpzerox.github.io/" target="_blank">demo</a></p>
+<p><a href="https://qpzerox.github.io/">qpzerox.github.io</a><p>
 <ul>
-	<li><a href="https://qpzerox.github.io/sudoku" target="_blank">vue数独</a></li>
+	<li><a href="https://qpzerox.github.io/sudoku" taget="_blank">vue数独</li>
 </ul>
