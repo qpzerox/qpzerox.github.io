@@ -1,0 +1,239 @@
+<!DOCTYPE HTML>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="format-detection" content="telephone=no">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<title></title>
+<link rel="stylesheet" type="text/css" href="css/common/layout.css">
+<link rel="stylesheet" type="text/css" href="css/common/general.css">
+<link rel="stylesheet" type="text/css" href="css/index.css">
+<script src="js/head.js"></script>
+<style>
+	.wrapBox {
+		padding: 20px;
+	}
+	.sudokuBox {
+		width: 219px;
+		display: flex;
+		flex-wrap: wrap;
+	}
+
+	.sudokuBox div {
+		margin: 0 -1px -1px 0;
+		width: 25px;
+		height: 25px;
+		border: 1px solid #CCC;
+		box-sizing: border-box;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.sudokuBox div input {
+		margin: 0;
+		padding: 0;
+		border: none;
+		width: 20px;
+		text-align: center;
+	}
+	.sudokuBox div input:disabled {
+		background: #eef;
+	}
+	.sudokuBox div input.error {
+		background: red;
+	}
+	.sudokuBox div:nth-child(3n) {
+		margin-right: 0;
+	}
+	.sudokuBox div:nth-child(27n) {
+		margin-bottom: 0;
+	}
+</style>
+</head>
+<body>
+<div id="container">
+	<section id="main">
+		<div class="wrapBox">
+			<h2>sudoku</h2>
+			<transition-group name="list" tag="div" class="sudokuBox">
+				<div v-for="cell in sudoList" v-bind:key="cell.id"><input :class="{error:cell.error}" :disabled="cell.disable" type="text" v-model="cell.num" maxlength="1" @input="validateNum(cell.id,cell.num)"></div>
+			</transition-group>
+			<!-- <button @click="curRowArr(1)">getRow</button>
+			<button @click="curColArr(1)">getCol</button>
+			<button @click="curBlockArr(1)">getBlock</button> -->
+		</div>
+	</section>
+</div>
+<script src="js/jquery.js"></script>
+<script src="js/common.js"></script>
+<script src="js/vue.js"></script>
+<script src="js/lodash.min.js"></script>
+<script>
+	var vm = new Vue({
+		el: '#container',
+		data:{
+			baseArr: [1,2,3,4,5,6,7,8,9],
+			inputArr:[],
+			hard:'18',
+			sudoList: Array.apply(null,{length: 81}).map(function(curValue,index){
+				return {
+					id:index,
+					num: '0',
+					rowNum: Math.floor(index/9)+1,
+					colNum: index%9+1,
+					blockNum: 0,
+					delArr:[],
+					disable: true,
+					error: false,
+				}
+			}),
+		},
+		created: function(){
+			var start = new Date().getTime();
+			var vm = this;
+			this.sudoList.forEach(function(el,index){
+				el.blockNum = vm.blockNum(el.rowNum,el.colNum);
+			});
+			this.generateSudo();
+			this.removeNum();
+			var end = new Date().getTime();
+			console.log(end-start+'ms');
+		},
+		methods: {
+			validateNum: function(id,value){  //验证数字
+				if(!value.match(/[1-9]/g)){
+					this.sudoList[id].num = '';
+				}
+				value = parseInt(value);
+				if(value){
+					if(this.selectableArr(id).indexOf(value) == -1){
+						this.sudoList[id].error = true;
+						this.inputArr = _.union(this.inputArr,[id]);  //添加数组并去重
+					}else{
+						this.sudoList[id].error = false;
+						_.pull(this.inputArr,id);  //去除arr中和id相同的值
+					}
+				}else{
+					this.sudoList[id].error = false;
+					this.inputArr = _.union(this.inputArr,[id]);
+				}
+				//console.log(this.inputArr);
+				if(this.inputArr.length==0){
+					setTimeout(function(){
+						alert('~恭喜完成数独~');
+					},100);
+				}
+			},
+			generateSudo: function(i){  //生成完整数独
+				for(var i=0;i<this.sudoList.length;i++){
+					if(this.sudoList[i].num == 0){
+						this.sudoList[i].num = this.getNum(i);
+						if(!this.sudoList[i].num){
+							this.sudoList[i].num == 0;
+							this.sudoList[i].delArr = [];
+							i--;
+							var backNum = this.sudoList[i].num;
+							this.sudoList[i].num = 0;
+							this.sudoList[i].delArr.push(backNum);
+							i--;
+						}
+					}
+				}
+			},
+			removeNum: function(){  //随机去掉数字
+				var removeArr = _.sampleSize(this.sudoList,this.hard);  //随机取this.hard个值
+				var vm = this;
+				removeArr.forEach(function(value,i){
+					vm.sudoList[value.id].num = '';
+					vm.sudoList[value.id].disable = false;
+					vm.inputArr.push(value.id);
+				});
+				//console.log(this.inputArr);
+			},
+			getNum: function(index){  //返回可输入的数字
+				var getArr = this.selectableArr(index);
+				if(getArr.length){
+					var num = _.sample(getArr);  //随机取1个值
+					return num;
+				}else{
+					return false;
+				}
+			},
+			curRowArr: function(rowNum){  //返回当前行的数字数组
+				var curRowArr = [];
+				this.sudoList.forEach(function(el,index){
+					if(el.num && el.rowNum == rowNum){
+						curRowArr.push(el.num);
+					}
+				});
+				curRowArr = _.uniq(curRowArr);  //去重
+				//console.log(curRowArr);
+				return curRowArr;
+			},
+			curColArr: function(colNum){  //返回当前列的数字数组
+				var curColArr = [];
+				this.sudoList.forEach(function(el,index){
+					if(el.num && el.colNum == colNum){
+						curColArr.push(el.num);
+					}
+				});
+				curColArr = _.uniq(curColArr);
+				//console.log(curColArr);
+				return curColArr;
+			},
+			curBlockArr: function(blockNum){  //返回当前块的数字数组
+				var curBlockArr = [];
+				this.sudoList.forEach(function(el,index){
+					if(el.num && el.blockNum == blockNum){
+						curBlockArr.push(el.num);
+					}
+				});
+				curBlockArr = _.uniq(curBlockArr);
+				//console.log(curBlockArr);
+				return curBlockArr;
+			},
+			selectableArr: function(index){  //返回当前位置可用的数字数组
+				var row = this.sudoList[index].rowNum;
+				var col = this.sudoList[index].colNum;
+				var block = this.sudoList[index].blockNum;
+				var delArr = this.sudoList[index].delArr;
+				return _.difference(this.baseArr,this.curRowArr(row),this.curColArr(col),this.curBlockArr(block),delArr);  //排除
+			},
+			blockNum: function(rowNum,colNum){  //返回当前位置所属的块
+				var num;
+				this.sudoList.forEach(function(el,index){
+					if(rowNum>6){
+						if(colNum>6){
+							num = 9;
+						}else if(colNum>3){
+							num = 8;
+						}else{
+							num = 7;
+						}
+					}else if(rowNum>3){
+						if(colNum>6){
+							num = 6;
+						}else if(colNum>3){
+							num = 5;
+						}else{
+							num = 4;
+						}
+					}else{
+						if(colNum>6){
+							num = 3;
+						}else if(colNum>3){
+							num = 2;
+						}else{
+							num = 1;
+						}
+					}
+				});
+				return num;
+			}
+		}
+	});
+</script>
+</body>
+</html>
