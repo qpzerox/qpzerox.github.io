@@ -57,12 +57,10 @@
 	<section id="main">
 		<div class="wrapBox">
 			<h2>sudoku</h2>
-			<transition-group name="list" tag="div" class="sudokuBox">
+			<p>removeNum:<input type="text" v-model="hard" size="1"><button value="regenerate" @click="regenerate">重新生成数组</button></p>
+			<div class="sudokuBox">
 				<div v-for="cell in sudoList" v-bind:key="cell.id"><input :class="{error:cell.error}" :disabled="cell.disable" type="text" v-model="cell.num" maxlength="1" @input="validateNum(cell.id,cell.num)"></div>
-			</transition-group>
-			<!-- <button @click="curRowArr(1)">getRow</button>
-			<button @click="curColArr(1)">getCol</button>
-			<button @click="curBlockArr(1)">getBlock</button> -->
+			</div>
 		</div>
 	</section>
 </div>
@@ -102,6 +100,16 @@
 			console.log(end-start+'ms');
 		},
 		methods: {
+			regenerate: function(){
+				var vm = this;
+				this.sudoList.forEach(function(el,index){
+					el.num = 0;
+					el.disable = true;
+					el.error = false;
+				});
+				this.generateSudo();
+				this.removeNum();
+			},
 			validateNum: function(id,value){  //验证数字
 				if(!value.match(/[1-9]/g)){
 					this.sudoList[id].num = '';
